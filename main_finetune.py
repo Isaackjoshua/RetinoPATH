@@ -94,6 +94,9 @@ def get_args_parser():
     # ---- Dataset & paths
     parser.add_argument("--data_path", default="./data/", type=str)
     parser.add_argument("--nb_classes", default=8, type=int)
+    # Class weights for imbalanced datasets (space-separated floats, one per class).
+    # If omitted, all classes are weighted equally.
+    parser.add_argument("--class_weights", type=float, nargs="+", default=None)
     parser.add_argument("--output_dir", default="./output_dir")
     parser.add_argument("--log_dir", default="./output_logs")
 
@@ -303,6 +306,8 @@ def main(args, criterion):
         model.load_state_dict(checkpoint["model"])
 
     model.to(device)
+    # Weight tensor in CrossEntropyLoss must be on the same device as model outputs.
+    criterion = criterion.to(device)
     model_without_ddp = model
 
     # ---- Adaptation toggle
@@ -440,7 +445,12 @@ if __name__ == "__main__":
     args = get_args_parser()
     args = args.parse_args()
 
-    criterion = torch.nn.CrossEntropyLoss()
+    if args.class_weights is not None:
+        weight = torch.tensor(args.class_weights, dtype=torch.float)
+        criterion = torch.nn.CrossEntropyLoss(weight=weight)
+        print(f"Using class weights: {args.class_weights}")
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
 
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)

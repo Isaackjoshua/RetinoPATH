@@ -144,3 +144,6 @@ output_dir/
 
 # Claude Code session memory
 .claude/
+
+# Miniconda installer
+Miniconda3-*.sh
