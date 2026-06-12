@@ -51,10 +51,8 @@ code,folder,eye,retinopathy,maculopathy,image_quality,image_path,split
 0029_T,29,LE,R2,M1,Adequate,"Data/Diabetic Retinopathy IMAGES/0029/LE/0029AI_WILBARD_KILEO_Monday, May 15, 1961_LE_4CA4H0CQ7ICJZE4C.JPG",train
 0029_T,29,RE,R2,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0029/RE/0029AI_WILBARD_KILEO_Monday, May 15, 1961_RE_4CA4H0CQ7ICJZANS.JPG",train
 0029_T,29,RE,R2,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0029/RE/0029AI_WILBARD_KILEO_Monday, May 15, 1961_RE_4CA4H0CQ7ICJZB6W.JPG",train
-0031_T,31,LE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0031/LE/._0031AI_ESTER_MNASHA_Tuesday, February 20, 1973_LE_4CA4H0CQ7ICL51QG.JPG",train
 0031_T,31,LE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0031/LE/0031AI_ESTER_MNASHA_Tuesday, February 20, 1973_LE_4CA4H0CQ7ICL4ZRQ.JPG",train
 0031_T,31,LE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0031/LE/0031AI_ESTER_MNASHA_Tuesday, February 20, 1973_LE_4CA4H0CQ7ICL51QG.JPG",train
-0031_T,31,RE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0031/RE/._0031AI_ESTER_MNASHA_Tuesday, February 20, 1973_RE_4CA4H0CQ7ICL4X3D.JPG",train
 0031_T,31,RE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0031/RE/0031AI_ESTER_MNASHA_Tuesday, February 20, 1973_RE_4CA4H0CQ7ICL4X3D.JPG",train
 0031_T,31,RE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0031/RE/0031AI_ESTER_MNASHA_Tuesday, February 20, 1973_RE_4CA4H0CQ7ICL4Z8M.JPG",train
 0033_T,33,LE,R0,M0,Adequate,"Data/Diabetic Retinopathy IMAGES/0033/LE/0033AI_JUSTINE_NJAU_Sunday, October 03, 1948_LE_4CA4H0CQ7IHZ6PZM (1).JPG",train

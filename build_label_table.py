@@ -58,6 +58,7 @@ def list_images(folder, eye):
     files = sorted(
         f for f in os.listdir(eye_dir)
         if f.lower().endswith((".jpg", ".jpeg", ".png", ".tif", ".tiff"))
+        and not f.startswith("._")   # macOS resource fork sidecars — not images
         and os.path.getsize(os.path.join(eye_dir, f)) > 0
     )
     return files             # may be empty list
