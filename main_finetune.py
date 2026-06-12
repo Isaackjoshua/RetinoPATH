@@ -2,6 +2,11 @@
 
 # =========================
 import argparse
+# Allow PIL to load images whose JPEG/PNG stream ends a few bytes early.
+# This is common in datasets transferred between systems and the resulting
+# image is almost always complete (missing footer bytes, not image data).
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 import datetime
 import json
 import os
