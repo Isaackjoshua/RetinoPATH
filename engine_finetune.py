@@ -10,7 +10,8 @@ from timm.data import Mixup
 from timm.utils import accuracy
 from sklearn.metrics import (
     accuracy_score, roc_auc_score, f1_score, average_precision_score,
-    hamming_loss, jaccard_score, recall_score, precision_score, cohen_kappa_score
+    hamming_loss, jaccard_score, recall_score, precision_score, cohen_kappa_score,
+    confusion_matrix as sklearn_confusion_matrix,
 )
 from pycm import ConfusionMatrix
 import util.misc as misc
@@ -118,27 +119,57 @@ def evaluate(data_loader, model, device, args, epoch, mode, num_class, log_write
     roc_auc = roc_auc_score(true_onehot, pred_softmax, multi_class='ovr', average='macro')
     precision = precision_score(true_onehot, pred_onehot, zero_division=0, average='macro')
     recall = recall_score(true_onehot, pred_onehot, zero_division=0, average='macro')
-    
+
+    # Per-class sensitivity (= recall) and specificity via OvR confusion matrix.
+    # Sensitivity_i = TP_i / (TP_i + FN_i)  — how well the model catches class i.
+    # Specificity_i = TN_i / (TN_i + FP_i)  — how well it avoids false alarms for i.
+    cm_array = sklearn_confusion_matrix(true_labels, pred_labels, labels=list(range(num_class)))
+    per_sensitivity, per_specificity = [], []
+    for i in range(num_class):
+        TP = int(cm_array[i, i])
+        FN = int(cm_array[i, :].sum()) - TP
+        FP = int(cm_array[:, i].sum()) - TP
+        TN = int(cm_array.sum()) - TP - FP - FN
+        per_sensitivity.append(TP / (TP + FN) if (TP + FN) > 0 else 0.0)
+        per_specificity.append(TN / (TN + FP) if (TN + FP) > 0 else 0.0)
+    macro_sensitivity = float(np.mean(per_sensitivity))
+    macro_specificity = float(np.mean(per_specificity))
+
     score = (f1 + roc_auc + kappa) / 3
     if log_writer:
-        for metric_name, value in zip(['accuracy', 'f1', 'roc_auc', 'hamming', 'jaccard', 'precision', 'recall', 'average_precision', 'kappa', 'score'],
-                                       [accuracy, f1, roc_auc, hamming, jaccard, precision, recall, average_precision, kappa, score]):
+        for metric_name, value in zip(
+            ['accuracy', 'f1', 'roc_auc', 'hamming', 'jaccard', 'precision', 'recall',
+             'average_precision', 'kappa', 'score', 'sensitivity', 'specificity'],
+            [accuracy, f1, roc_auc, hamming, jaccard, precision, recall,
+             average_precision, kappa, score, macro_sensitivity, macro_specificity]
+        ):
             log_writer.add_scalar(f'perf/{metric_name}', value, epoch)
     
     print(f'val loss: {metric_logger.meters["loss"].global_avg}')
     print(f'Accuracy: {accuracy:.4f}, F1 Score: {f1:.4f}, ROC AUC: {roc_auc:.4f}, Hamming Loss: {hamming:.4f},\n'
           f' Jaccard Score: {jaccard:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f},\n'
-          f' Average Precision: {average_precision:.4f}, Kappa: {kappa:.4f}, Score: {score:.4f}')
+          f' Average Precision: {average_precision:.4f}, Kappa: {kappa:.4f}, Score: {score:.4f}\n'
+          f' Macro Sensitivity: {macro_sensitivity:.4f}, Macro Specificity: {macro_specificity:.4f}\n'
+          f' Per-class Sensitivity: {[round(s, 4) for s in per_sensitivity]}\n'
+          f' Per-class Specificity: {[round(s, 4) for s in per_specificity]}')
     
     metric_logger.synchronize_between_processes()
     
     results_path = os.path.join(args.output_dir, args.task, f'metrics_{mode}.csv')
     file_exists = os.path.isfile(results_path)
+    per_sens_cols = [f'sensitivity_{i}' for i in range(num_class)]
+    per_spec_cols = [f'specificity_{i}' for i in range(num_class)]
     with open(results_path, 'a', newline='', encoding='utf8') as cfa:
         wf = csv.writer(cfa)
         if not file_exists:
-            wf.writerow(['val_loss', 'accuracy', 'f1', 'roc_auc', 'hamming', 'jaccard', 'precision', 'recall', 'average_precision', 'kappa'])
-        wf.writerow([metric_logger.meters["loss"].global_avg, accuracy, f1, roc_auc, hamming, jaccard, precision, recall, average_precision, kappa])
+            wf.writerow(['val_loss', 'accuracy', 'f1', 'roc_auc', 'hamming', 'jaccard',
+                         'precision', 'recall', 'average_precision', 'kappa',
+                         'macro_sensitivity', 'macro_specificity']
+                        + per_sens_cols + per_spec_cols)
+        wf.writerow([metric_logger.meters["loss"].global_avg, accuracy, f1, roc_auc,
+                     hamming, jaccard, precision, recall, average_precision, kappa,
+                     macro_sensitivity, macro_specificity]
+                    + per_sensitivity + per_specificity)
     
     if mode == 'test':
         cm = ConfusionMatrix(actual_vector=true_labels, predict_vector=pred_labels)
