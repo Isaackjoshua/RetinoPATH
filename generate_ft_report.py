@@ -411,10 +411,10 @@ def page3(pdf):
          "Excellent recall; ~15% false alarm rate acceptable for screening"],
         ["R1 — Mild",
          f"{t_ps[1]:.3f}", f"{t_pspec[1]:.3f}",
-         "Major FT gain (+0.309 vs LP); mild DR now well-separated"],
+         f"Major FT gain ({t_ps[1]-lp_ps[1]:+.3f} vs LP); mild DR now well-separated"],
         ["R2 — Moderate",
          f"{t_ps[2]:.3f}", f"{t_pspec[2]:.3f}",
-         "Below LP (0.706); small test n=51 inflates per-prediction variance"],
+         f"{'Above' if t_ps[2]>=lp_ps[2] else 'Below'} LP ({lp_ps[2]:.3f}); Δ{t_ps[2]-lp_ps[2]:+.3f} — small test n inflates variance"],
         ["R3A — Active Prolif.",
          f"{t_ps[3]:.3f}", f"{t_pspec[3]:.3f}",
          "Critical gap: 75% of prolif. cases missed on test set (n=48 images)"],
@@ -453,12 +453,12 @@ def page3(pdf):
     ax_cl.text(0.02, 0.90, "Clinical Interpretation of Fine-tuned Per-class Performance",
                fontsize=10, fontweight="bold", color=NAVY, transform=ax_cl.transAxes, va="top")
     notes = [
-        ("R3A sensitivity (0.250)",
-         "75% of proliferative cases go undetected — the most dangerous failure. Low test n (48) means each missed prediction moves sensitivity by 0.021; interpret with caution."),
-        ("R1 recovery (+0.309 vs LP)",
-         "Biggest win of fine-tuning: mild DR jumped from 0.411 to 0.720. Backbone adaptation enables non-linear class boundaries the frozen linear head could not form."),
-        ("R2 regression (−0.157 vs LP)",
-         "Moderate DR sensitivity dropped from 0.706 to 0.549. Likely the model re-allocates R2 feature space to better separate R1, trading moderate recall for mild recall."),
+        (f"R3A sensitivity ({t_ps[3]:.3f})",
+         f"{(1-t_ps[3])*100:.0f}% of proliferative cases go undetected — the most dangerous failure. Low test n (~48) means each missed prediction moves sensitivity by ~0.021; interpret with caution."),
+        (f"R1 {'gain' if t_ps[1]>=lp_ps[1] else 'loss'} ({t_ps[1]-lp_ps[1]:+.3f} vs LP)",
+         f"Biggest win of fine-tuning: mild DR sensitivity moved from {lp_ps[1]:.3f} to {t_ps[1]:.3f}. Backbone adaptation enables non-linear class boundaries the frozen linear head could not form."),
+        (f"R2 {'gain' if t_ps[2]>=lp_ps[2] else 'regression'} ({t_ps[2]-lp_ps[2]:+.3f} vs LP)",
+         f"Moderate DR sensitivity moved from {lp_ps[2]:.3f} (LP) to {t_ps[2]:.3f} (FT). {'FT successfully recovers moderate-grade detection.' if t_ps[2]>=lp_ps[2] else 'The model may re-allocate R2 feature space toward R1 separation, trading moderate recall for mild recall.'}"),
     ]
     x0, y0 = 0.01, 0.68
     for title_n, body in notes:
@@ -563,11 +563,11 @@ def page4(pdf):
     ax_obs.text(0.02, 0.93, "Key Observations", fontsize=10.5, fontweight="bold",
                 color=NAVY, transform=ax_obs.transAxes, va="top")
     obs = [
-        f"• AUROC jumped 0.782 → {auroc[best_i]:.3f} in just {best_epoch} epochs — pretrained backbone features activate rapidly when all layers receive gradients.",
-        f"• Val AUROC peaked at epoch {best_epoch} then oscillated ~{plateau_val:.3f} while val loss climbed 0.56 → 0.87: a clear overfitting signal. Early stopping (patience ≈ 10 on val AUROC) would save ~42 epochs of compute.",
-        f"• Train loss continued declining to 0.337 by epoch 44, confirming the model kept learning on training data after val AUROC plateaued — the gap between train and val loss widens steadily past epoch 10.",
+        f"• AUROC jumped {auroc[0]:.3f} → {auroc[best_i]:.3f} in just {best_epoch} epochs — pretrained backbone features activate rapidly when all layers receive gradients.",
+        f"• Val AUROC peaked at epoch {best_epoch} then oscillated ~{plateau_val:.3f} while val loss climbed {loss_v[best_i]:.2f} → {loss_v[-1]:.2f}: a clear overfitting signal. Early stopping (patience ≈ 10 on val AUROC) would save ~{n_epochs - best_epoch - 1} epochs of compute.",
+        f"• Train loss continued declining to {float(np.nanmin(train_loss_ep)):.3f} by epoch {int(np.nanargmin(train_loss_ep))}, confirming the model kept learning on training data after val AUROC plateaued — the gap between train and val loss widens steadily past epoch 10.",
         f"• LR warm-up ramps over the first 10 epochs, peaking at {peak_lr:.2e}, then cosine decays to near-zero — this schedule matches the AUROC curve's rapid early rise followed by diminishing returns.",
-        "• Sensitivity and specificity at the best checkpoint (epoch 7) reflect the sharpest moment of generalisation; later epochs improve train metrics but not val/test performance.",
+        f"• Sensitivity and specificity at the best checkpoint (epoch {best_epoch}) reflect the sharpest moment of generalisation; later epochs improve train metrics but not val/test performance.",
         "• Recommended next step: add early stopping to the fine-tune script to avoid unnecessary epochs; then proceed to Model B (maculopathy binary task).",
     ]
     y0 = 0.80

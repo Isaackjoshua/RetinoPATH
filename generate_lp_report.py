@@ -176,7 +176,7 @@ def page1(pdf):
         ["Pretrained on",   "UK Biobank + MEH fundus cohort (736k images)"],
         ["Backbone status", "FROZEN — weights not updated"],
         ["Head",            "Linear: 1024 → 4 classes  (no hidden layers)"],
-        ["Epochs",          "50  (best ckpt by val AUROC at epoch 38)"],
+        ["Epochs",          f"50  (best ckpt by val AUROC at epoch {best_epoch})"],
         ["Batch size",      "64"],
         ["Input",           "224 × 224 px colour fundus photo"],
         ["Optimiser",       "AdamW (default RETFound settings)"],
@@ -378,7 +378,7 @@ def page3(pdf):
     # ── Summary table ─────────────────────────────────────────────────────────
     ax_tbl = fig.add_axes([0.05, 0.24, 0.58, 0.28])
     ax_tbl.axis("off")
-    ax_tbl.text(0, 1.04, "Metric Summary at Best Checkpoint (epoch 38, AUROC 0.841)",
+    ax_tbl.text(0, 1.04, f"Metric Summary at Best Checkpoint (epoch {best_epoch}, AUROC {auroc[best_i]:.3f})",
                 fontsize=10.5, fontweight="bold", color=NAVY, transform=ax_tbl.transAxes)
 
     col_h = ["Class", "Sensitivity", "Specificity", "Clinical Note"]
@@ -436,8 +436,8 @@ def page3(pdf):
                fontsize=10, fontweight="bold", color=NAVY, transform=ax_cl.transAxes, va="top")
     notes = [
         ("Sensitivity (recall)", "Low sensitivity = missed cases. Clinically dangerous for R2/R3A — undetected proliferative disease can lead to preventable blindness."),
-        ("Specificity",          "Low specificity = false alarms. R0 specificity of 0.68 means 32% of healthy eyes are flagged — acceptable as a screening tool but increases unnecessary referrals."),
-        ("R1 bottleneck",        "R1 sensitivity of 0.44 is the weakest point. Mild DR is a borderline grade that overlaps with both R0 and R2 in feature space — a linear head cannot form a curved boundary."),
+        ("Specificity",          f"Low specificity = false alarms. R0 specificity of {best_spec[0]:.2f} means {(1-best_spec[0])*100:.0f}% of healthy eyes are flagged — acceptable as a screening tool but increases unnecessary referrals."),
+        ("R1 bottleneck",        f"R1 sensitivity of {best_sens[1]:.2f} is the weakest point. Mild DR is a borderline grade that overlaps with both R0 and R2 in feature space — a linear head cannot form a curved boundary."),
     ]
     x0, y0 = 0.01, 0.68
     for title_n, body in notes:
@@ -547,12 +547,12 @@ def page4(pdf):
     ax_obs.text(0.02, 0.93, "Key Observations", fontsize=10.5, fontweight="bold",
                 color=NAVY, transform=ax_obs.transAxes, va="top")
     obs = [
-        "• AUROC climbed rapidly in the first 8 epochs (0.730 → 0.831), confirming RETFound features already carry substantial retinopathy structure without any adaptation.",
-        "• The model plateaued around AUROC 0.836–0.841 from epoch 20 onwards; the linear head saturated and additional training offered negligible gains.",
-        "• Macro specificity (0.867) substantially exceeds macro sensitivity (0.660) — the model is conservative: it rarely raises a false alarm but does miss cases, especially R1.",
-        "• R1 sensitivity (0.436) is the critical weakness: mild DR sits in a feature-space region that cannot be cleanly separated from R0 by a single hyperplane.",
-        "• R2 and R3A achieve reasonable sensitivity (0.676 / 0.667) despite being rare classes — the class weights successfully force the model to attend to these grades.",
-        "• This baseline establishes AUROC 0.841 as the frozen-feature lower bound; full fine-tuning of all backbone layers is expected to push significantly higher.",
+        f"• AUROC climbed rapidly in the first 8 epochs ({auroc[0]:.3f} → {auroc[min(8, len(ep)-1)]:.3f}), confirming RETFound features already carry substantial retinopathy structure without any adaptation.",
+        f"• The model plateaued around AUROC {auroc[20:].mean():.3f} from epoch 20 onwards; the linear head saturated and additional training offered negligible gains.",
+        f"• Macro specificity ({m_spec[best_i]:.3f}) substantially exceeds macro sensitivity ({m_sens[best_i]:.3f}) — the model is conservative: it rarely raises a false alarm but does miss cases, especially R1.",
+        f"• R1 sensitivity ({per_sens[best_i, 1]:.3f}) is the critical weakness: mild DR sits in a feature-space region that cannot be cleanly separated from R0 by a single hyperplane.",
+        f"• R2 and R3A achieve sensitivity of {per_sens[best_i, 2]:.3f} / {per_sens[best_i, 3]:.3f} respectively despite being rare classes — the class weights force the model to attend to these grades.",
+        f"• This baseline establishes AUROC {auroc[best_i]:.3f} as the frozen-feature lower bound; full fine-tuning of all backbone layers is expected to push significantly higher.",
     ]
     y0 = 0.78
     for o in obs:
