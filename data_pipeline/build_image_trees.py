@@ -19,10 +19,12 @@ across patients while staying human-readable.
 """
 
 import os
+from pathlib import Path
 import pandas as pd
 
-SPLITS_CSV = "labels/splits.csv"
-TREE_ROOT  = "image_trees"
+ROOT       = Path(__file__).parent.parent
+SPLITS_CSV = ROOT / "labels/splits.csv"
+TREE_ROOT  = str(ROOT / "image_trees")
 
 TASKS = {
     "modelA": {

@@ -13,13 +13,13 @@ from matplotlib.patches import FancyBboxPatch
 from matplotlib.backends.backend_pdf import PdfPages
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-ROOT     = os.path.dirname(__file__)
+ROOT     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOG_DIR  = os.path.join(ROOT, "output_logs/retfound_dinov2_modelA_finetune/retfound_dinov2_modelA_finetune")
 VAL_CSV  = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_finetune/retfound_dinov2_modelA_finetune/metrics_val.csv")
 TEST_CSV = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_finetune/retfound_dinov2_modelA_finetune/metrics_test.csv")
 LP_TEST  = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_lp/retfound_dinov2_modelA_lp/metrics_test.csv")
 SPLITS   = os.path.join(ROOT, "labels/splits.csv")
-OUT_PDF  = os.path.join(ROOT, "labels/modelA_ft_report.pdf")
+OUT_PDF  = os.path.join(ROOT, "reports/modelA_ft_report.pdf")
 
 # ── Palette ─────────────────────────────────────────────────────────────────────
 BG     = "#F7F9FC"

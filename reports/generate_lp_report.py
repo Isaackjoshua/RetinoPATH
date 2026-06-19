@@ -15,11 +15,11 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MultipleLocator
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-ROOT    = os.path.dirname(__file__)
+ROOT    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOG_DIR = os.path.join(ROOT, "output_logs/retfound_dinov2_modelA_lp/retfound_dinov2_modelA_lp")
 VAL_CSV = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_lp/retfound_dinov2_modelA_lp/metrics_val.csv")
 SPLITS  = os.path.join(ROOT, "labels/splits.csv")
-OUT_PDF = os.path.join(ROOT, "labels/modelA_lp_report.pdf")
+OUT_PDF = os.path.join(ROOT, "reports/modelA_lp_report.pdf")
 
 # ── Palette ────────────────────────────────────────────────────────────────────
 BG      = "#F7F9FC"

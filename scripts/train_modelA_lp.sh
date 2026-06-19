@@ -16,7 +16,7 @@
 #   Larger batch = fewer steps per epoch = faster wall-clock time.
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 ADAPTATION="lp"
 MODEL="RETFound_dinov2"

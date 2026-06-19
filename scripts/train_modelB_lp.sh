@@ -2,7 +2,7 @@
 # Model B — Maculopathy (M0/M1), linear probe
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 ADAPTATION="lp"
 MODEL="RETFound_dinov2"

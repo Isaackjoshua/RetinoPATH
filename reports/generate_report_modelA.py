@@ -16,13 +16,13 @@ from PIL import Image
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-ROOT        = os.path.dirname(__file__)
+ROOT        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LP_LOG_DIR  = os.path.join(ROOT, "output_logs/retfound_dinov2_modelA_lp/retfound_dinov2_modelA_lp")
 FT_VAL_CSV  = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_finetune/retfound_dinov2_modelA_finetune/metrics_val.csv")
 FT_TEST_CSV = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_finetune/retfound_dinov2_modelA_finetune/metrics_test.csv")
 CONF_MAT    = os.path.join(ROOT, "output_dir/retfound_dinov2_modelA_finetune/retfound_dinov2_modelA_finetune/confusion_matrix_test.jpg")
 SPLITS_CSV  = os.path.join(ROOT, "labels/splits.csv")
-OUT_PDF     = os.path.join(ROOT, "labels/modelA_report.pdf")
+OUT_PDF     = os.path.join(ROOT, "reports/modelA_report.pdf")
 
 # ── Palette ────────────────────────────────────────────────────────────────────
 C_BG       = "#F7F9FC"   # page background

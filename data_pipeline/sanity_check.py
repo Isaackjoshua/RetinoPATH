@@ -9,12 +9,14 @@ Open them with any image viewer.
 """
 
 import os
+from pathlib import Path
 import random
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 
-SPLITS_CSV = "labels/splits.csv"
-TREE_ROOT  = "image_trees"
+ROOT       = Path(__file__).parent.parent
+SPLITS_CSV = ROOT / "labels/splits.csv"
+TREE_ROOT  = str(ROOT / "image_trees")
 THUMB_W    = 224   # thumbnail width
 THUMB_H    = 224
 COLS       = 4     # images per class row
@@ -94,7 +96,7 @@ grades_A   = ["R0", "R1", "R2", "R3A"]
 samples_A  = pick_samples(modelA_dir, grades_A)
 make_grid(samples_A, grades_A,
           "Model A — Retinopathy (train set, 4 images per class)",
-          "labels/sanity_check_modelA.png")
+          str(ROOT / "figures/sanity_check_modelA.png"))
 
 # ── Model B ───────────────────────────────────────────────────────────────────
 modelB_dir = os.path.join(TREE_ROOT, "modelB")
@@ -102,7 +104,7 @@ grades_B   = ["M0", "M1"]
 samples_B  = pick_samples(modelB_dir, grades_B)
 make_grid(samples_B, grades_B,
           "Model B — Maculopathy (train set, 4 images per class)",
-          "labels/sanity_check_modelB.png")
+          str(ROOT / "figures/sanity_check_modelB.png"))
 
 # ── Final per-class counts ────────────────────────────────────────────────────
 print("\nFinal image counts in tree:")

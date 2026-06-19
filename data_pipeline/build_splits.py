@@ -24,12 +24,14 @@ Exclusions applied here (not in build_label_table.py, so the raw CSV stays clean
 """
 
 import os
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-LABEL_CSV = "labels/per_eye_labels.csv"
-OUT_CSV   = "labels/splits.csv"
+ROOT      = Path(__file__).parent.parent
+LABEL_CSV = ROOT / "labels/per_eye_labels.csv"
+OUT_CSV   = ROOT / "labels/splits.csv"
 
 RETINOPATHY_ORDER = {"R0": 0, "R1": 1, "R2": 2, "R3A": 3}  # severity ranking
 SEED = 42  # fix for reproducibility

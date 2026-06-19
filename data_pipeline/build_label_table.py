@@ -16,11 +16,13 @@ Output: labels/per_eye_labels.csv — one row per (patient × eye × image).
 """
 
 import os
+from pathlib import Path
 import pandas as pd
 
-EXCEL   = "Data/Homterton_Reading_Centre_Grades.xlsx"
-IMG_DIR = "Data/Diabetic Retinopathy IMAGES"
-OUT_CSV = "labels/per_eye_labels.csv"
+ROOT    = Path(__file__).parent.parent
+EXCEL   = ROOT / "Data/Homterton_Reading_Centre_Grades.xlsx"
+IMG_DIR = ROOT / "Data/Diabetic Retinopathy IMAGES"
+OUT_CSV = ROOT / "labels/per_eye_labels.csv"
 
 # ── 1. Load and filter to the definitive grade row per patient ────────────────
 df = pd.read_excel(EXCEL, sheet_name="Sheet1")

@@ -18,7 +18,7 @@
 #   12 GB VRAM with batch_size=24 is comfortable; larger batches risk OOM.
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 ADAPTATION="finetune"
 MODEL="RETFound_dinov2"

@@ -2,7 +2,7 @@
 # Model B — Maculopathy (M0/M1), full fine-tune
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 ADAPTATION="finetune"
 MODEL="RETFound_dinov2"
