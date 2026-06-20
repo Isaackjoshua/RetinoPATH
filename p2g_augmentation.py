@@ -71,6 +71,9 @@ class P2GDataset(Dataset):
         self.train = train
         self.minority_labels = minority_labels
 
+        if not self.train and self.eval_tf is None:
+            raise ValueError("eval_tf is required when train=False (eval mode needs a transform)")
+
     def __len__(self):
         return len(self.records)
 

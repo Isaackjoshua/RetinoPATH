@@ -46,6 +46,17 @@ def test_eval_mode_always_uses_eval_transform():
     for lbl in (0, 1, 2, 3):
         assert ds.transform_for(lbl) is eval_tf
 
+def test_eval_mode_requires_eval_transform():
+    std = build_standard_train_transform()
+    min_tf = build_minority_train_transform()
+    raised = False
+    try:
+        P2GDataset(records=[], standard_tf=std, minority_tf=min_tf,
+                   eval_tf=None, train=False)
+    except ValueError:
+        raised = True
+    assert raised, "P2GDataset(train=False, eval_tf=None) must raise ValueError"
+
 def test_minority_transform_has_no_random_erasing():
     # The whole point of the geometry-heavy choice: protect tiny lesions.
     assert not _contains_random_erasing(build_minority_train_transform())
