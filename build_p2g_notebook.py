@@ -99,7 +99,7 @@ print('  SUCCESS CRITERION (test, argmax)')
 print('=' * 60)
 for i, c in enumerate(CLASSES):
     print(f'  {c:<4} sens: P2B {s_p2b[i]:.4f} -> P2G {s_p2g[i]:.4f}  '
-          f'({"+" if s_p2g[i] >= s_p2b[i] else ""}{s_p2g[i]-s_p2b[i]:+.4f})')
+          f'({s_p2g[i]-s_p2b[i]:+.4f})')
 r1_ok = s_p2g[1] >= 0.79
 minority_up = (s_p2g[2] > s_p2b[2]) or (s_p2g[3] > s_p2b[3])
 print(f'\\n  R1 floor (>=0.79): {"PASS" if r1_ok else "FAIL"}  (R1={s_p2g[1]:.4f})')
