@@ -16,45 +16,69 @@ Backbone: **RETFound-DINOv2-MEH** (`YukunZhou/RETFound_dinov2_meh` on HuggingFac
 
 ## Environment
 
-- Conda env: `retfound` — always use `/home/eth/miniconda3/envs/retfound/bin/python`
-- GPU: RTX 3060 12 GB
-- Working directory: `/home/eth/Desktop/Isaack/RETFound-main`
+- Conda env: `retfound` — always use `/home/eth-admin/miniconda3/envs/retfound/bin/python`
+- GPU: RTX A6000 48 GB (note: original P1–P2G runs were on an RTX 3060 12 GB; the P2B
+  config — batch 16 × accum 2 + grad checkpointing — is still 12 GB-tuned and left as-is
+  to keep results comparable, even though the A6000 has far more headroom)
+- Working directory: `/home/eth-admin/Desktop/isaack/RETFound-main`
 - Notebooks live at repo root (not in a subdirectory) to keep relative paths working
 
 ---
 
 ## Data
 
-- Images: `Data/Diabetic Retinopathy IMAGES/` (note the space) — gitignored, not version-controlled
+**Rebuilt 2026-06-20 on the more-complete image export `Data/Diabetic Retinopathy IMAGES 2/`.**
+The original `Data/Diabetic Retinopathy IMAGES/` had ~2400 eye-folders empty of usable
+images (only 1302 imaged patients); the new folder is a strict superset (2392 imaged
+patients), nearly doubling the cohort and the rare classes. `splits.csv` + `per_eye_labels.csv`
+were regenerated from it (`data_pipeline/build_label_table.py` + `build_splits.py`).
+
+- Images: `Data/Diabetic Retinopathy IMAGES 2/` (note the space) — gitignored, not version-controlled
 - Labels: `labels/splits.csv` — columns: `code, folder, eye, retinopathy, maculopathy, image_quality, image_path, split`
-- Split: 4075 CV images (990 patients, split=train/val), 702 test images (175 patients, split=test)
-- Test class distribution: R0=91, R1=63, R2=12, R3A=9 patients — R3A is very sparse
+  — **gitignored (PHI: `image_path` embeds patient name + DOB); never commit**
+- Split (current, new cohort): **2,147 patients / 8,844 images** — CV pool (train+val)
+  1,824 patients / 7,495 images; test 323 patients / 1,349 images
+- Test class distribution: **R0=173, R1=116, R2=20, R3A=14 patients** (R2/R3A far more
+  robust than the old 12/9 — much more reliable minority eval)
 - Grade mapping: `{'R0': 0, 'R1': 1, 'R2': 2, 'R3A': 3}`
 - `image_path` column is the filepath field (NOT `filepath`)
-- `ranking=1` is the definitive grade per patient
+- `ranking=1` selects the definitive adjudicated grade per patient (de-dups multiple reads,
+  not a patient filter). Cohort defined by the grades spreadsheet, not the disk folders.
+- Exclusions to reach `splits.csv`: must have a `ranking==1` grade, ≥1 usable (non-zero-byte)
+  image, `image_quality=='Adequate'`, retinopathy ∈ {R0,R1,R2,R3A} (U / R3S dropped)
 
 ---
 
-## Recommended Configuration (Model A)
+## Recommended Configuration (Model A) — new-data cohort (2026-06-20)
 
-**P2B · Patient Max Pooling · 4-Way TTA · Argmax**
+**P2B · Patient MEAN Pooling · 4-Way TTA · Argmax**
+(On the new data PtMean overtook PtMax — the richer minority data favours mean-pooling.)
 
-| Metric | Value |
-|---|---|
-| Accuracy | 85.71% (150/175) |
-| Cohen's Kappa (quadratic) | 0.8220 |
-| Macro AUROC | 0.9370 |
-| Macro Sensitivity | 0.6999 |
-| R0 Sensitivity | 0.9780 |
-| R1 Sensitivity | 0.7937 |
-| R2 Sensitivity | 0.5833 |
-| R3A Sensitivity | 0.4444 |
+| Metric | Value | vs old-data best (PtMax+TTA) |
+|---|---|---|
+| Accuracy | 84.83% (274/323) | 85.71% |
+| Cohen's Kappa (quadratic) | **0.8501** | 0.8220 |
+| Macro AUROC | **0.9475** | 0.9370 |
+| Macro Sensitivity | **0.7513** | 0.6999 |
+| R0 Sensitivity | 0.9769 | 0.9780 |
+| R1 Sensitivity | 0.7069 | 0.7937 |
+| R2 Sensitivity | **0.7500** | 0.5833 |
+| R3A Sensitivity | **0.5714** | 0.4444 |
 
-Runner-up: P2B + PtMean + Argmax (AUROC 0.9456, Kappa 0.8212, R1=0.810) — better if R1 ≥ 0.80 is a hard requirement.
+Per-class AUROC: R0 0.931, R1 0.900, R2 0.980, R3A 0.979.
+
+Runner-up: P2B + PtMax + Argmax (Kappa **0.8544**, MacroSens 0.7438, R1=0.750) — best Kappa
+and best R1; prefer it if R1 ≥ 0.75 matters more than peak macro-sensitivity.
+
+**Takeaway:** rebuilding on the new image export was the biggest lever for the rare classes —
+R2 0.583→0.750 and R3A 0.444→0.571, with Kappa/AUROC/macro-sens all up, on a ~2× larger test set.
 
 ---
 
 ## Completed Phases (Model A)
+
+**Key Result values below are the original OLD-data run.** P2B + P2D TTA + Evaluation were
+**re-run on the new cohort (2026-06-20)** — see Recommended Configuration for the current numbers.
 
 | Phase | Notebook | Description | Key Result |
 |---|---|---|---|
@@ -67,6 +91,10 @@ Runner-up: P2B + PtMean + Argmax (AUROC 0.9456, Kappa 0.8212, R1=0.810) — bett
 | Evaluation | `model_evaluation.ipynb` | Full metrics for recommended config | See above |
 | P2E | `phase2e_balanced_sampling.ipynb` | Side experiment: WeightedRandomSampler + plain CE | R1 collapsed to 0.000 — not viable |
 | P2E Results | `phase2e_results.ipynb` | Results analysis for P2E | Documented R1 collapse |
+| Dataset Rebuild | `data_pipeline/build_*.py` | Rebuild on `…IMAGES 2` export | 1,165→2,147 patients; rare classes ~2× |
+| P2B (new data) | `phase2b_full_finetune.ipynb` | Re-run on new cohort, recomputed class weights | OOF AUROC 0.911, Kappa 0.766 |
+| P2D TTA (new data) | `phase2d_tta.ipynb` | 4-way TTA on new cohort | PtMean+TTA MacroSens 0.751, R3A 0.571 |
+| Evaluation (new data) | `model_evaluation.ipynb` | Full metrics, PtMean+TTA | Acc 0.848, Kappa 0.850, AUROC 0.948 |
 
 ---
 
@@ -75,9 +103,12 @@ Runner-up: P2B + PtMean + Argmax (AUROC 0.9456, Kappa 0.8212, R1=0.810) — bett
 | Phase | Description | Status |
 |---|---|---|
 | P2F | Oversampling (WeightedRandomSampler) + P2B focal loss + class weights | Not started |
-| P2G | Minority-class aggressive augmentation (stronger transforms for R2/R3A only) | Not started |
+| P2G | Minority-class aggressive augmentation (stronger transforms for R2/R3A only) | Built (module + notebook), run superseded by dataset rebuild |
 
-Both use P2B as the base — single-variable changes. Output dirs: `output_dir/phase2f_cv/` and `output_dir/phase2g_cv/`.
+P2F uses P2B as the base — single-variable change. Output dir: `output_dir/phase2f_cv/`.
+P2G was fully built (`p2g_augmentation.py`, `phase2g_minority_augmentation.ipynb`,
+`docs/superpowers/specs|plans/2026-06-20-p2g-*`); its old-data run was stopped to free the GPU
+for the dataset rebuild. Re-run on the new data only if minority sensitivity still needs lifting.
 
 ---
 
@@ -94,7 +125,7 @@ output_dir/
 
 figures/              — All evaluation plots (confusion matrix, ROC, etc.)
 reports/              — PDF reports + generator scripts
-labels/splits.csv     — Ground truth + train/val/test split
+labels/splits.csv     — Ground truth + train/val/test split (GITIGNORED — PHI, local only)
 ```
 
 Threshold key structures:
@@ -117,7 +148,8 @@ PATIENCE      = 10         # early stop on val AUROC
 BATCH_SIZE    = 16
 ACCUM_STEPS   = 2          # effective batch = 32
 FOCAL_GAMMA   = 2.0
-CLASS_WEIGHTS = [1.0, 1.7851, 9.5294, 15.6774]  # inverse frequency
+CLASS_WEIGHTS = [1.0, 1.796, 10.8469, 17.502]   # inverse frequency, recomputed on new cohort
+                                                 # (old data was [1.0, 1.7851, 9.5294, 15.6774])
 
 # Loss
 criterion = FocalLoss(gamma=2.0, weight=torch.tensor(CLASS_WEIGHTS))
@@ -130,9 +162,10 @@ criterion = FocalLoss(gamma=2.0, weight=torch.tensor(CLASS_WEIGHTS))
 
 ## Inference Pipeline
 
-1. Load `test_tta_probs.npy` (shape: 702×4, TTA-averaged over 5 folds)
+1. Load `test_tta_probs.npy` (shape: 1349×4 on new cohort, TTA-averaged over 5 folds)
 2. Normalise rows to sum to 1
-3. Patient max pooling: for each patient, element-wise max across image probs, re-normalise
+3. Patient MEAN pooling: for each patient, element-wise mean across image probs, re-normalise
+   (recommended config; patient label = worst grade across the patient's eyes)
 4. Argmax → predicted grade
 
 ---
@@ -155,10 +188,10 @@ tta_transforms = [
 
 Three techniques combined:
 1. **Focal loss (γ=2)** — down-weights easy examples, focuses on hard/uncertain ones
-2. **Inverse-frequency class weights** [1.0, 1.79, 9.53, 15.68] — passed to focal loss
+2. **Inverse-frequency class weights** [1.0, 1.80, 10.85, 17.50] (new cohort) — passed to focal loss
 3. **Patient-level stratified K-fold** — ensures R2/R3A appear in every fold's validation set
 
-At inference: patient max pooling + TTA give minority classes more chances to be detected.
+At inference: patient pooling (mean, recommended) + TTA give minority classes more chances to be detected.
 
 **P2E lesson:** WeightedRandomSampler with plain CE caused R1 to collapse to 0.000 sensitivity. The model over-fired on R2, misclassifying R1 as R2. Focal loss + class weights is more stable than the sampler alone.
 
