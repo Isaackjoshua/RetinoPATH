@@ -21,7 +21,10 @@ import pandas as pd
 
 ROOT    = Path(__file__).parent.parent
 EXCEL   = ROOT / "Data/Homterton_Reading_Centre_Grades.xlsx"
-IMG_DIR = ROOT / "Data/Diabetic Retinopathy IMAGES"
+# Rebuilt on the more-complete image export (was "Data/Diabetic Retinopathy IMAGES",
+# which had ~2400 eye-folders empty of usable images). The new folder is a strict
+# superset and lifts the imaged cohort from 1302 to 2392 patients.
+IMG_DIR = ROOT / "Data/Diabetic Retinopathy IMAGES 2"
 OUT_CSV = ROOT / "labels/per_eye_labels.csv"
 
 # ── 1. Load and filter to the definitive grade row per patient ────────────────

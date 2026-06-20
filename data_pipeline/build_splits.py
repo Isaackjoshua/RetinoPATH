@@ -46,6 +46,16 @@ after_q = len(df["code"].drop_duplicates())
 print(f"[FILTER] Inadequate quality: {before - after_q} patients lost "
       f"(some eyes dropped, patient kept if other eye is Adequate)")
 
+# Keep only Model A target retinopathy grades: drop U (ungradable) and R3S
+# (stable proliferative — not one of R0/R1/R2/R3A). The docstring above always
+# claimed this exclusion, but the original script only applied it in reporting,
+# not to the saved frame; applying it here makes splits.csv reproduce the
+# intended R0/R1/R2/R3A cohort exactly. A patient is kept if >=1 eye survives.
+before_g = len(df["code"].drop_duplicates())
+df = df[df["retinopathy"].isin(["R0", "R1", "R2", "R3A"])].copy()
+after_g = len(df["code"].drop_duplicates())
+print(f"[FILTER] Non-target retinopathy (U/R3S): {before_g - after_g} patients lost")
+
 # ── 2. Build a per-patient stratum for stratified splitting ───────────────────
 # We want to preserve rare class combinations. Strategy:
 #   - worst_dr: highest retinopathy severity across usable (non-U, non-R3S) eyes
