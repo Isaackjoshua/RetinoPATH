@@ -143,11 +143,25 @@ def patch_cell1(src):
     text = text.replace("FOCAL_GAMMA = 2.0", "FOCAL_GAMMA = 2.0\nP4_LAMBDA   = 0.5   # auxiliary feature-loss weight")
     return lines(text)
 
+def patch_cell8(src):
+    """Make the LLRD optimizer wrapper-aware: params live under backbone.*,
+    and the feature_head (contains 'head') routes to head-LR (depth 0)."""
+    text = "".join(src)
+    assert "num_blocks = len(model.blocks)" in text and "def get_depth(name):" in text
+    text = text.replace(
+        "num_blocks = len(model.blocks)",
+        "num_blocks = len(model.backbone.blocks) if hasattr(model, 'backbone') else len(model.blocks)")
+    text = text.replace(
+        "    def get_depth(name):\n",
+        "    def get_depth(name):\n        name = name.replace('backbone.', '')  # multi-task wrapper prefix\n")
+    return lines(text)
+
 def main():
     nb = json.load(open(SRC)); cells = nb["cells"]
     cells[0]["source"] = CELL0
     cells[1]["source"] = patch_cell1(cells[1]["source"])
     cells[4]["source"] = CELL4
+    cells[8]["source"] = patch_cell8(cells[8]["source"])
     cells[9]["source"] = lines("".join(cells[9]["source"]) + CELL9_APPEND)
     cells[11]["source"] = CELL11
     nb["cells"] = cells[:12]
