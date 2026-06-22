@@ -95,6 +95,17 @@ R2 0.583→0.750 and R3A 0.444→0.571, with Kappa/AUROC/macro-sens all up, on a
 | P2B (new data) | `phase2b_full_finetune.ipynb` | Re-run on new cohort, recomputed class weights | OOF AUROC 0.911, Kappa 0.766 |
 | P2D TTA (new data) | `phase2d_tta.ipynb` | 4-way TTA on new cohort | PtMean+TTA MacroSens 0.751, R3A 0.571 |
 | Evaluation (new data) | `model_evaluation.ipynb` | Full metrics, PtMean+TTA | Acc 0.848, Kappa 0.850, AUROC 0.948 |
+| P3 (518px) | `phase3_res518_*.ipynb`, `phase3_tta_eval.py` | Native 518px full fine-tune (single-var: INPUT_SIZE 224→518) | **NO GAIN — slightly worse.** Don't repeat. |
+
+**Phase 3 / resolution — negative result (don't re-attempt).** Hypothesis: 518px (RETFound's
+native res; pos_embed loads cleanly) would resolve the tiny lesions defining R1/R2/R3A and lift
+macro-sensitivity past 0.80. Result: **518 ≈ 224 on OOF (0.684 vs 0.682) and slightly worse on
+test** (PtMean+TTA macro-sens 0.726 vs 224's 0.751; R3A 0.50 vs 0.57; Kappa 0.830 vs 0.850).
+The fold-0 pilot was a false positive (high single-fold variance on ~43 R3A / ~80 R2 per fold).
+Lesson: pilot ≥2 folds. Also established: **threshold/decision-rule tuning is capped ~0.73-0.75**
+(macro-sens is a zero-sum reallocation in single-label classification — boosting R2/R3A collapses
+R1). To exceed 0.80 the **model** must better separate adjacent grades — next bet is lesion-feature
+multi-task (predict the grades-spreadsheet's microaneurysm/IRMA/NVD features).
 
 ---
 
