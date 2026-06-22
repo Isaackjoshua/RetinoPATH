@@ -35,6 +35,18 @@ assert len(df) == df["code"].nunique(), "Expected exactly one rank-1 row per pat
 # Strip the trailing '_T' from the code to get the image folder name
 df["folder"] = df["code"].str.replace(r"_T$", "", regex=True)
 
+# P4 lesion features (per eye). Blank => absent (0); 1 => present. Validated:
+# R0 is 0% on all four; haem/exud/cws rise R0->R2; nvd is R3A-specific.
+_FEATURE_SRC = {
+    "haem": "Retinal haemorrhage(s)",
+    "exud": "Any exudate in the presence of other features of DR",
+    "cws":  "Any number of cotton wool spots (CWS) in the presence of other features of DR",
+    "nvd":  "New vessels on disc (NVD)",
+}
+for _side in ("Left Eye", "Right Eye"):
+    for _src in _FEATURE_SRC.values():
+        assert f"{_src} ({_side})" in df.columns, f"missing feature column: {_src} ({_side})"
+
 # ── 2. Unpivot: one row per patient becomes two rows (LE + RE) ────────────────
 # We reshape so downstream code works uniformly on (patient, eye) pairs.
 records = []
@@ -47,6 +59,10 @@ for _, row in df.iterrows():
             "retinopathy":      row[f"Retinopathy ({side})"],
             "maculopathy":      row[f"Maculopathy ({side})"],
             "image_quality":    row[f"Image quality ({side})"],
+            "haem":             int(row[f"{_FEATURE_SRC['haem']} ({side})"] == 1),
+            "exud":             int(row[f"{_FEATURE_SRC['exud']} ({side})"] == 1),
+            "cws":              int(row[f"{_FEATURE_SRC['cws']} ({side})"] == 1),
+            "nvd":              int(row[f"{_FEATURE_SRC['nvd']} ({side})"] == 1),
         })
 
 eyes = pd.DataFrame(records)
