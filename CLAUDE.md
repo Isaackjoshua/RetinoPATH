@@ -97,6 +97,7 @@ R2 0.583→0.750 and R3A 0.444→0.571, with Kappa/AUROC/macro-sens all up, on a
 | Evaluation (new data) | `model_evaluation.ipynb` | Full metrics, PtMean+TTA | Acc 0.848, Kappa 0.850, AUROC 0.948 |
 | P3 (518px) | `phase3_res518_*.ipynb`, `phase3_tta_eval.py` | Native 518px full fine-tune (single-var: INPUT_SIZE 224→518) | **NO GAIN — slightly worse.** Don't repeat. |
 | P4 (lesion multi-task) | `phase4_mt_pilot.ipynb`, `phase4_mt_folds2to4.ipynb`, `p4_multitask.py`, `run_fold4_eval.py`, `run_fold_tta_test.py` | Shared-backbone aux head predicting 4 binary lesion features (haem/exud/cws/nvd), λ=0.5 BCE added to focal-grade loss (single-var vs P2B) | **NO GAIN — slightly worse.** Don't repeat. |
+| P5 (MAE backbone) | `p5_mae.py`, `build_p5_notebook.py`, `phase5_mae_pilot.ipynb`, `tests/test_p5_*.py` | Swap backbone RETFound-DINOv2-MEH → RETFound-**MAE**-MEH (ViT-L/16, global-pooled); same P2B pipeline (single-var) | **WORSE — stopped at 2-fold pilot gate.** Don't repeat. |
 
 **Phase 3 / resolution — negative result (don't re-attempt).** Hypothesis: 518px (RETFound's
 native res; pos_embed loads cleanly) would resolve the tiny lesions defining R1/R2/R3A and lift
@@ -119,6 +120,20 @@ signal did not sharpen adjacent-grade separation. **Two structural bets now nega
 P4 multi-task)** — with this backbone + data the ~0.75 macro-sens ceiling is the binding constraint;
 auxiliary supervision and resolution don't move it. (Pilot lesson held: folds 0–1 OOF AUROC 0.935/
 0.922 looked promising but the full 5-fold + test recipe was flat — always confirm on test+TTA.)
+
+**Phase 5 / MAE backbone — negative result (don't re-attempt).** Hypothesis: RETFound's **MAE**-MEH
+backbone (ViT-L/16, masked-autoencoder pretraining, global-pooled) might beat the current
+**DINOv2**-MEH backbone (ViT-L/14, self-distillation). Single-variable swap — only the backbone
+loader + LLRD change; same MEH pretraining domain, folds/seed, focal/weights, transforms. Result:
+**clearly worse, stopped at the 2-fold pilot gate.** MAE folds 0/1 OOF AUROC **0.852 / 0.833
+(mean 0.843)** vs DINOv2's 0.911 (P2B) / 0.935+0.922 (P4 pilot) — a ~0.07 gap, consistent across
+both folds (not variance), with R1 sensitivity collapsing to 0.32–0.37. Gate was mean OOF AUROC
+≥ 0.906; 0.843 failed decisively, so folds 2–4 were not run. **DINOv2 self-distillation is the
+better backbone for this task** — matches RETFound's own move from MAE (2023) to DINOv2 (2024+).
+Lesson reinforced: the gated 2-fold pilot saved ~3 folds of GPU on a clear loser. Infra notes:
+`RETFound_mae_meh` is a `gated=auto` HF repo (accept terms once on the model page); execute
+notebooks with `nbconvert --ExecutePreprocessor.kernel_name=retfound` (the default `python3` kernel
+resolves to a broken `~/.local` py3.10).
 
 ---
 
@@ -148,6 +163,8 @@ output_dir/
   phase2e_cv/         — P2E OOF + test probs, best_fold_{0-4}.pth, phase2e_summary.json
   phase4_mt_cv/       — P4 multi-task OOF + test probs (per-fold + TTA), best_fold_{0-4}.pth,
                         fold_{0-4}_test_tta_probs.npy, test_tta_probs.npy (negative result)
+  phase5_mae_cv/      — P5 MAE-backbone pilot OOF + test probs (folds 0-1 only),
+                        best_fold_{0,1}.pth, fold_results_pilot.json (negative result, gated at pilot)
 
 figures/              — All evaluation plots (confusion matrix, ROC, etc.)
 reports/              — PDF reports + generator scripts
