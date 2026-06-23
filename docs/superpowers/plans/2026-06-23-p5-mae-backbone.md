@@ -15,7 +15,7 @@
 - Do not modify P2B/P4 files, `output_dir/phase2b_cv/`, `output_dir/phase4_mt_cv/`, the recommended config, or `CLAUDE.md` (CLAUDE.md updated only in the final gated task, after a result exists).
 - MAE checkpoint: `YukunZhou/RETFound_mae_meh`, filename `RETFound_mae_meh.pth`.
 - Hyperparameters (identical to P2B): focal γ=2.0, `CLASS_WEIGHTS=[1.0, 1.796, 10.8469, 17.502]`, BASE_LR 5e-5, LLRD_DECAY 0.75, WEIGHT_DECAY 0.05, WARMUP_EPOCHS 5, MAX_EPOCHS 50, PATIENCE 10, BATCH_SIZE 16, ACCUM_STEPS 2, INPUT_SIZE 224, NUM_CLASSES 4, SEED 42.
-- `torch.load`: prefer `weights_only=True`; the MAE checkpoint may carry an argparse Namespace, so fall back to `weights_only=False` (trusted: official YukunZhou RETFound weights) only on failure.
+- `torch.load`: always `weights_only=True` (no arbitrary unpickling). The MAE checkpoint carries an `argparse.Namespace` of train args, so allowlist that one benign type via `torch.serialization.safe_globals([argparse.Namespace])`. Never disable `weights_only`; if another global is required, torch names it — allowlist it explicitly.
 - All GPU work runs behind the `nvidia-smi` ≥6000 MiB-free waiter pattern (other project intermittently holds both GPUs).
 - Commit after each task. Commit message trailers:
   `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` and

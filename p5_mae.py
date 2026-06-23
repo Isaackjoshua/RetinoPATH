@@ -45,15 +45,21 @@ def build_classifier(num_classes=4, img_size=224, drop_path_rate=0.2):
 
 
 def load_pretrained_mae_(backbone, repo_id, filename, device='cpu'):
-    """In-place load of RETFound-MAE weights, mirroring main_finetune.py."""
+    """In-place load of RETFound-MAE weights, mirroring main_finetune.py.
+
+    Loaded with weights_only=True (no arbitrary unpickling / code execution).
+    RETFound MAE checkpoints wrap the state_dict alongside an argparse.Namespace
+    of training args, so that one benign type is allowlisted for the safe loader.
+    If a checkpoint needs another global, torch raises naming it — allowlist it
+    explicitly rather than disabling weights_only.
+    """
+    import argparse
     from huggingface_hub import hf_hub_download
     from util.pos_embed import interpolate_pos_embed
     path = hf_hub_download(repo_id=repo_id, filename=filename)
-    try:
+    with torch.serialization.safe_globals([argparse.Namespace]):
         ck = torch.load(path, map_location='cpu', weights_only=True)
-    except Exception:
-        ck = torch.load(path, map_location='cpu', weights_only=False)  # trusted official weights
-    cm = ck['model']
+    cm = ck['model'] if 'model' in ck else ck
     cm = {k.replace('backbone.', ''): v for k, v in cm.items()}
     cm = {k.replace('mlp.w12.', 'mlp.fc1.'): v for k, v in cm.items()}
     cm = {k.replace('mlp.w3.', 'mlp.fc2.'): v for k, v in cm.items()}
