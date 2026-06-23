@@ -96,6 +96,7 @@ R2 0.583→0.750 and R3A 0.444→0.571, with Kappa/AUROC/macro-sens all up, on a
 | P2D TTA (new data) | `phase2d_tta.ipynb` | 4-way TTA on new cohort | PtMean+TTA MacroSens 0.751, R3A 0.571 |
 | Evaluation (new data) | `model_evaluation.ipynb` | Full metrics, PtMean+TTA | Acc 0.848, Kappa 0.850, AUROC 0.948 |
 | P3 (518px) | `phase3_res518_*.ipynb`, `phase3_tta_eval.py` | Native 518px full fine-tune (single-var: INPUT_SIZE 224→518) | **NO GAIN — slightly worse.** Don't repeat. |
+| P4 (lesion multi-task) | `phase4_mt_pilot.ipynb`, `phase4_mt_folds2to4.ipynb`, `p4_multitask.py`, `run_fold4_eval.py`, `run_fold_tta_test.py` | Shared-backbone aux head predicting 4 binary lesion features (haem/exud/cws/nvd), λ=0.5 BCE added to focal-grade loss (single-var vs P2B) | **NO GAIN — slightly worse.** Don't repeat. |
 
 **Phase 3 / resolution — negative result (don't re-attempt).** Hypothesis: 518px (RETFound's
 native res; pos_embed loads cleanly) would resolve the tiny lesions defining R1/R2/R3A and lift
@@ -104,8 +105,20 @@ test** (PtMean+TTA macro-sens 0.726 vs 224's 0.751; R3A 0.50 vs 0.57; Kappa 0.83
 The fold-0 pilot was a false positive (high single-fold variance on ~43 R3A / ~80 R2 per fold).
 Lesson: pilot ≥2 folds. Also established: **threshold/decision-rule tuning is capped ~0.73-0.75**
 (macro-sens is a zero-sum reallocation in single-label classification — boosting R2/R3A collapses
-R1). To exceed 0.80 the **model** must better separate adjacent grades — next bet is lesion-feature
-multi-task (predict the grades-spreadsheet's microaneurysm/IRMA/NVD features).
+R1). To exceed 0.80 the **model** must better separate adjacent grades.
+
+**Phase 4 / lesion multi-task — negative result (don't re-attempt).** Hypothesis: a shared-backbone
+auxiliary head predicting 4 binary lesion features (haem/exud/cws/nvd from the grades spreadsheet),
+trained jointly via `loss = focal(grade) + 0.5·BCE(features)`, would force the backbone to separate
+adjacent grades and lift macro-sens past 0.80. Single-variable change vs P2B (same folds/seed/LLRD/
+focal/weights; only the aux head + loss term added). Result: **at-or-below P2B everywhere.** 5-fold
+aggregate OOF AUROC 0.915 vs P2B 0.911 (flat); test PtMean+TTA **macro-sens 0.719 vs 0.751, Kappa
+0.833 vs 0.850, AUROC 0.942 vs 0.948, acc 0.817 vs 0.848**. Per-class test sens R0 0.977 / R1 0.629 /
+R2 0.700 / R3A 0.571 — R3A *matched* P2B but R1 (−0.078) and R2 (−0.050) regressed. The aux lesion
+signal did not sharpen adjacent-grade separation. **Two structural bets now negative (P3 resolution,
+P4 multi-task)** — with this backbone + data the ~0.75 macro-sens ceiling is the binding constraint;
+auxiliary supervision and resolution don't move it. (Pilot lesson held: folds 0–1 OOF AUROC 0.935/
+0.922 looked promising but the full 5-fold + test recipe was flat — always confirm on test+TTA.)
 
 ---
 
@@ -133,6 +146,8 @@ output_dir/
                         phase2b_summary.json, oof_tta_probs.npy, test_tta_probs.npy
   phase2c_thresholds/ — thresholds.json (P1 Youden thresholds)
   phase2e_cv/         — P2E OOF + test probs, best_fold_{0-4}.pth, phase2e_summary.json
+  phase4_mt_cv/       — P4 multi-task OOF + test probs (per-fold + TTA), best_fold_{0-4}.pth,
+                        fold_{0-4}_test_tta_probs.npy, test_tta_probs.npy (negative result)
 
 figures/              — All evaluation plots (confusion matrix, ROC, etc.)
 reports/              — PDF reports + generator scripts
