@@ -66,6 +66,11 @@ def main():
             c['outputs'] = []
             c['execution_count'] = None
 
+    # Pin kernel to the retfound conda env (the cloned spec's name was 'python3',
+    # which nbconvert resolves to a broken ~/.local py3.10 kernel).
+    nb.setdefault('metadata', {})['kernelspec'] = {
+        'display_name': 'retfound', 'language': 'python', 'name': 'retfound'}
+
     json.dump(nb, open(OUT, 'w'), indent=1)
     print(f'Wrote {OUT}')
 

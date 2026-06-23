@@ -20,6 +20,8 @@ def test_generated_notebook_markers():
     assert 'RETFound_dinov2_meh' not in src
     # all code cells cleared of stale outputs
     assert all(c.get('outputs', []) == [] for c in nb['cells'] if c['cell_type'] == 'code')
+    # kernel pinned to the retfound conda env (not the broken 'python3' kernel)
+    assert nb['metadata']['kernelspec']['name'] == 'retfound'
 
 
 if __name__ == '__main__':
