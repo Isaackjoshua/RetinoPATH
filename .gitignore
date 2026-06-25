@@ -150,6 +150,7 @@ Miniconda3-*.sh
 
 # PHI: label CSVs embed patient names/DOB in image_path — never track
 labels/*.csv
+labels/*.csv.bak*
 labels/.~lock.*
 
 # Local-only model backups (large; protect recommended model)
