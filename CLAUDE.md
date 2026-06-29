@@ -8,7 +8,7 @@ Project context for Claude Code. Read this before starting any session.
 
 Two single-task models for automated diabetic retinopathy screening from NHS UK fundus photographs:
 - **Model A** — DR grading: R0 (normal) / R1 (mild-mod NPDR) / R2 (mod-sev NPDR) / R3A (PDR)
-- **Model B** — Maculopathy: M0 / M1 (binary) — not yet started
+- **Model B** — Maculopathy: M0 / M1 (binary) — **done** (test AUROC 0.978, patient-mean + TTA; see Model B section below)
 
 Backbone: **RETFound-DINOv2-MEH** (`YukunZhou/RETFound_dinov2_meh` on HuggingFace), ViT-Large, 307M params, 24 blocks, hidden dim 1024, patch size 14, img_size 224. Pre-trained on MEH/NHS UK fundus data — chosen for domain match.
 
@@ -134,6 +134,40 @@ Lesson reinforced: the gated 2-fold pilot saved ~3 folds of GPU on a clear loser
 `RETFound_mae_meh` is a `gated=auto` HF repo (accept terms once on the model page); execute
 notebooks with `nbconvert --ExecutePreprocessor.kernel_name=retfound` (the default `python3` kernel
 resolves to a broken `~/.local` py3.10).
+
+---
+
+## Model B — Maculopathy (M0/M1) — DONE (2026-06-29)
+
+Binary referable-maculopathy screening. Single-variable clone of the P2B recipe
+(`modelB_maculopathy.py`): RETFound-DINOv2-MEH full fine-tune, LLRD 0.75, grad
+checkpointing, batch 16×accum 2, cosine+warmup, 5-fold StratifiedKFold seed=42.
+Task adaptations only: head → 2 classes; folds stratified on patient-worst maculopathy;
+FocalLoss γ=2 with **no class weights** (M1 ≈ 26% — near-balanced, weights unnecessary).
+M1 operating point chosen on OOF and reported on test (no test peeking).
+
+**Recommended: Patient MEAN pooling + 4-way TTA.** Test set 323 patients (M1 prevalence 30.7%).
+
+| Metric | Value |
+|---|---|
+| Test AUROC (patient-level) | **0.9778** |
+| 5-fold OOF AUROC (image-level) | 0.9529 |
+
+Operating points (threshold from OOF, evaluated on test):
+
+| Operating point | Thr | Sens | Spec | PPV | NPV | TP/FP/FN/TN |
+|---|---|---|---|---|---|---|
+| Spec ≥ 95% | 0.453 | 0.889 | 0.960 | 0.907 | 0.951 | 88/9/11/215 |
+| Sens ≥ 85% | 0.418 | 0.899 | 0.951 | 0.890 | 0.955 | 89/11/10/213 |
+| Youden | 0.367 | 0.929 | 0.933 | 0.860 | 0.968 | 92/15/7/209 |
+
+PtMax is near-identical (AUROC 0.9770). Artifacts: `output_dir/modelB_maculopathy_cv/`
+(`best_fold_{0-4}.pth`, per-fold OOF/test probs, `test_tta_probs.npy`, `modelB_tta_results.json`).
+
+**Takeaway:** binary maculopathy is a much cleaner problem than 4-class DR grading —
+AUROC 0.978 vs Model A's 0.948, with sens ~0.89–0.93 and spec ~0.93–0.96 held
+simultaneously (no minority-class collapse). Focal loss alone (no weights / no sampler)
+was stable here because the classes are near-balanced.
 
 ---
 

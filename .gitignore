@@ -142,6 +142,9 @@ image_trees/
 # Training outputs (model checkpoints, logs)
 output_dir/
 
+# Local-only backup of training outputs (large; not version-controlled)
+output_dir_backup/
+
 # Claude Code session memory
 .claude/
 
