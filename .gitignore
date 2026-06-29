@@ -145,6 +145,10 @@ output_dir/
 # Local-only backup of training outputs (large; not version-controlled)
 output_dir_backup/
 
+# MLflow local tracking store (regenerable: python mlflow_backfill.py)
+mlruns/
+mlflow.db
+
 # Claude Code session memory
 .claude/
 
