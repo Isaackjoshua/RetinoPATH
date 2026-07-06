@@ -16,11 +16,22 @@ Backbone: **RETFound-DINOv2-MEH** (`YukunZhou/RETFound_dinov2_meh` on HuggingFac
 
 ## Environment
 
-- Conda env: `retfound` — always use `/home/eth-admin/miniconda3/envs/retfound/bin/python`
-- GPU: RTX A6000 48 GB (note: original P1–P2G runs were on an RTX 3060 12 GB; the P2B
+- Conda env: project-local **prefix** env at `.conda/` — interpreter
+  `/home/eth/Desktop/isaack/RETFound-main/.conda/bin/python` (Python 3.11).
+  Activate with `conda activate /home/eth/Desktop/isaack/RETFound-main/.conda`
+  (or `conda activate ./.conda` from the repo root) — it has **no** short name, so
+  `conda activate retfound` will NOT work. Recreate from `requirements.txt`:
+  `pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121`
+  (the `torch==2.5.1+cu121` pin needs the PyTorch index).
+  - Jupyter kernel is named `retfound` (`~/.local/share/jupyter/kernels/retfound`) and points
+    at this `.conda` env; notebooks pin `kernelspec: retfound`. Register/refresh it with
+    `python -m ipykernel install --user --name retfound --display-name retfound`.
+  - (Historical note: earlier runs referenced a `retfound` env at
+    `/home/eth-admin/miniconda3/envs/retfound` — that path no longer exists on this machine.)
+- GPU: RTX A4000 16 GB (note: original P1–P2G runs were on an RTX 3060 12 GB; the P2B
   config — batch 16 × accum 2 + grad checkpointing — is still 12 GB-tuned and left as-is
-  to keep results comparable, even though the A6000 has far more headroom)
-- Working directory: `/home/eth-admin/Desktop/isaack/RETFound-main`
+  to keep results comparable, and comfortably fits the A4000's 16 GB)
+- Working directory: `/home/eth/Desktop/isaack/RETFound-main`
 - Notebooks live at repo root (not in a subdirectory) to keep relative paths working
 
 ---
