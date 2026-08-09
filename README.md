@@ -263,7 +263,7 @@ If you find this repository useful, please consider citing this paper:
 @misc{zhou2025generalistversusspecialistvision,
       title={Generalist versus Specialist Vision Foundation Models for Ocular Disease and Oculomics}, 
       author={Yukun Zhou and Paul Nderitu and Jocelyn Hui Lin Goh and Justin Engelmann and Siegfried K. Wagner and Anran Ran and Hongyang Jiang and Lie Ju and Ke Zou and Sahana Srinivasan and Hyunmin Kim and Takahiro Ninomiya and Zheyuan Wang and Gabriel Dawei Yang and Eden Ruffell and Dominic Williamson and Rui Santos and Gabor Mark Somfai and Carol Y. Cheung and Tien Yin Wong and Daniel C. Alexander and Yih Chung Tham and Pearse A. Keane},
-      year={2025},2e
+      year={2025},2ef
       eprint={2509.03421},
       archivePrefix={arXiv},
       primaryClass={eess.IV},
